@@ -13,6 +13,19 @@
 		"ghcr.io/devcontainers-extra/features/fzf:1": {
 			"version": "latest"
 		}
+	},
+	"mounts": [
+		"source=/var/run/docker.sock,target=/var/run/docker-host.sock,type=bind"
+	],
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"vscjava.vscode-java-pack",
+				"vivaxy.vscode-conventional-commits",
+				"mhutchie.git-graph",
+				"vmware.vscode-boot-dev-pack"
+			]
+		}
 	}
 
 	// Features to add to the dev container. More info: https://containers.dev/features.

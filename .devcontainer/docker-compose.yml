@@ -3,6 +3,7 @@ version: '3.8'
 volumes:
   postgres-data:
   postgres-data-sso:
+  keycloak_data:
 networks:
   app-db:
     driver: bridge
@@ -16,7 +17,7 @@ services:
     container_name: javadev
     build: 
       context: .
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.application
     environment:
       # NOTE: POSTGRES_DB/USER/PASSWORD should match values in db container
         POSTGRES_PASSWORD: postgres
@@ -55,8 +56,31 @@ services:
     # (Adding the "ports" property to this file will not forward from a Codespace.)
 
   sso:
-    build: Dockerfile.keycloak
-    restart: unless-stopped
+    image: quay.io/keycloak/keycloak:latest
+    environment:
+      # Création de l’admin
+      - KEYCLOAK_ADMIN=admin
+      - KEYCLOAK_ADMIN_PASSWORD=admin
+
+      # Configuration de la base externe
+      - KC_DB=postgres
+      - KC_DB_URL_HOST=sso-postgres
+      - KC_DB_URL_DATABASE=keycloak-db
+      - KC_DB_USERNAME=postgres
+      - KC_DB_PASSWORD=postgres
+
+      # Optionnel : paramètres JDBC, ex. pour gérer le SSL
+      # - KC_DB_URL_PARAMS=sslmode=disable
+
+    # On passe en mode production pour pouvoir utiliser la base externe
+    command: ["start", "--optimized"]
+
+    ports:
+      - "8080:8080"
+    depends_on:
+      - sso-postgres
+    volumes:
+      - keycloak_data:/opt/keycloak/data
     networks:
         - sso-db
         - sso-network
