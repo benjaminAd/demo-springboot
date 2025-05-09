@@ -1,0 +1,76 @@
+version: '3.8'
+
+volumes:
+  postgres-data:
+  postgres-data-sso:
+networks:
+  app-db:
+    driver: bridge
+  sso-network:
+    driver: bridge
+  sso-db:
+    driver: bridge
+
+services:
+  app:
+    container_name: javadev
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      # NOTE: POSTGRES_DB/USER/PASSWORD should match values in db container
+        POSTGRES_PASSWORD: postgres
+        POSTGRES_USER: postgres
+        POSTGRES_DB: postgres
+        POSTGRES_HOSTNAME: postgresdb
+
+    volumes:
+      - ../..:/workspaces:cached
+      
+    # Overrides default command so things don't shut down after the process ends.
+    command: sleep infinity
+
+    networks:
+      - app-db
+      - sso-network
+
+    # Use "forwardPorts" in **devcontainer.json** to forward an app port locally. 
+    # (Adding the "ports" property to this file will not forward from a Codespace.)
+
+  db:
+    container_name: demo-db
+    image: postgres:latest
+    restart: unless-stopped
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    environment:
+      # NOTE: POSTGRES_DB/USER/PASSWORD should match values in app container
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_DB: postgres
+    networks:
+      - app-db
+
+    # Add "forwardPorts": ["5432"] to **devcontainer.json** to forward PostgreSQL locally.
+    # (Adding the "ports" property to this file will not forward from a Codespace.)
+
+  sso:
+    build: Dockerfile.keycloak
+    restart: unless-stopped
+    networks:
+        - sso-db
+        - sso-network
+  
+  sso-postgres:
+      container_name: sso-postgres
+      image: postgres:latest
+      restart: unless-stopped
+      volumes:
+        - postgres-data-sso:/var/lib/postgresql/data
+      environment:
+        # NOTE: POSTGRES_DB/USER/PASSWORD should match values in app container
+        POSTGRES_PASSWORD: postgres
+        POSTGRES_USER: postgres
+        POSTGRES_DB: keycloak-db
+      networks:
+        - sso-db
