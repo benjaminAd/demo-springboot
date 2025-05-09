@@ -61,11 +61,14 @@ services:
       # Création de l’admin
       - KEYCLOAK_ADMIN=admin
       - KEYCLOAK_ADMIN_PASSWORD=admin
+      # ← Spécifiez ici le hostname
+      - KC_HOSTNAME=localhost
+      # Facultatif mais recommandé si vous passez par un reverse-proxy
+      - KC_PROXY_ADDRESS_FORWARDING=true
 
       # Configuration de la base externe
       - KC_DB=postgres
-      - KC_DB_URL_HOST=sso-postgres
-      - KC_DB_URL_DATABASE=keycloak-db
+      - KC_DB_URL=jdbc:postgresql://sso-postgres:5432/keycloak-db
       - KC_DB_USERNAME=postgres
       - KC_DB_PASSWORD=postgres
 
